@@ -1,5 +1,7 @@
 # MCP Server Facturas
 
+![tests](https://github.com/pablofranco1/mcp-server-facturas/actions/workflows/tests.yml/badge.svg)
+
 Servidor MCP que permite a un LLM (Claude Desktop o cualquier cliente MCP) consultar y gestionar clientes y facturas. El modelo nunca accede a la base de datos directamente: solo puede usar un conjunto cerrado de herramientas, y el servidor valida cada operación independientemente de lo que decida el modelo.
 
 ![Resumen de deuda](docs/resumen.png)
@@ -22,6 +24,7 @@ El modelo puede equivocarse o ser manipulado (por ejemplo, mediante prompt injec
 - **Validación de entradas:** importes entre 0 y 50.000 €, vencimientos entre 1 y 120 días, estados de una lista cerrada y conceptos limitados a 200 caracteres.
 - **Límite acumulado:** máximo de 50.000 € facturados por cliente y día.
 - **Errores explicativos:** los rechazos devuelven un motivo claro al modelo, que puede explicárselo al usuario en lugar de reintentar a ciegas.
+- **Tests automáticos:** cada push ejecuta en GitHub Actions las pruebas de validación, del límite diario y de inyección SQL.
 
 ### Por qué un límite acumulado
 
@@ -67,7 +70,15 @@ Reinicia Claude Desktop y prueba, por ejemplo:
 - Crea una factura de 800 € a Talleres Ruzafa por consultoría
 - Marca como pagada la factura 12
 
+## Tests
+
+```
+pip install "pytest<9"
+pytest -v
+```
+
 ## Estructura
 
 - `server.py`: servidor MCP y herramientas
 - `seed.py`: genera la base de datos de ejemplo
+- `test_server.py`: tests de validación, límites e inyección SQL

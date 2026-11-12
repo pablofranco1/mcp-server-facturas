@@ -16,39 +16,45 @@ CLIENTES = [
 
 CONCEPTOS = ["Mantenimiento web", "Consultoría", "Desarrollo a medida", "Hosting anual", "Soporte técnico"]
 
-random.seed(42)
-DB.unlink(missing_ok=True)
 
-con = sqlite3.connect(DB)
-con.executescript("""
-CREATE TABLE clientes (id INTEGER PRIMARY KEY, nombre TEXT, nif TEXT, email TEXT);
-CREATE TABLE facturas (
-    id INTEGER PRIMARY KEY,
-    cliente_id INTEGER REFERENCES clientes(id),
-    fecha TEXT,
-    vencimiento TEXT,
-    concepto TEXT,
-    importe REAL,
-    pagada INTEGER DEFAULT 0
-);
-""")
-con.executemany("INSERT INTO clientes (nombre, nif, email) VALUES (?, ?, ?)", CLIENTES)
+def crear_db(path):
+    random.seed(42)
+    Path(path).unlink(missing_ok=True)
 
-hoy = date.today()
-for _ in range(40):
-    fecha = hoy - timedelta(days=random.randint(0, 180))
-    con.execute(
-        "INSERT INTO facturas (cliente_id, fecha, vencimiento, concepto, importe, pagada) VALUES (?, ?, ?, ?, ?, ?)",
-        (
-            random.randint(1, len(CLIENTES)),
-            fecha.isoformat(),
-            (fecha + timedelta(days=30)).isoformat(),
-            random.choice(CONCEPTOS),
-            round(random.uniform(150, 3000), 2),
-            int(random.random() < 0.7),
-        ),
-    )
+    con = sqlite3.connect(path)
+    con.executescript("""
+    CREATE TABLE clientes (id INTEGER PRIMARY KEY, nombre TEXT, nif TEXT, email TEXT);
+    CREATE TABLE facturas (
+        id INTEGER PRIMARY KEY,
+        cliente_id INTEGER REFERENCES clientes(id),
+        fecha TEXT,
+        vencimiento TEXT,
+        concepto TEXT,
+        importe REAL,
+        pagada INTEGER DEFAULT 0
+    );
+    """)
+    con.executemany("INSERT INTO clientes (nombre, nif, email) VALUES (?, ?, ?)", CLIENTES)
 
-con.commit()
-con.close()
-print("Base de datos creada:", DB)
+    hoy = date.today()
+    for _ in range(40):
+        fecha = hoy - timedelta(days=random.randint(1, 180))
+        con.execute(
+            "INSERT INTO facturas (cliente_id, fecha, vencimiento, concepto, importe, pagada) VALUES (?, ?, ?, ?, ?, ?)",
+            (
+                random.randint(1, len(CLIENTES)),
+                fecha.isoformat(),
+                (fecha + timedelta(days=30)).isoformat(),
+                random.choice(CONCEPTOS),
+                round(random.uniform(150, 3000), 2),
+                int(random.random() < 0.7),
+            ),
+        )
+
+    con.commit()
+    con.close()
+
+
+if __name__ == "__main__":
+    crear_db(DB)
+    print("Base de datos creada:", DB)
